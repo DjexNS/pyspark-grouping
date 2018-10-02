@@ -1,17 +1,17 @@
 from itertools import *
 from operator import itemgetter
 
-from pyspark import SparkConf
+from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, ArrayType
 
-conf = SparkConf().setAppName('Grouper').setMaster("local").set("spark.speculation", "false")
+conf = SparkConf().setAppName('UBI-test').setMaster("local").set("spark.speculation", "false")
 sc = SparkContext(conf=conf)
 spark = SparkSession(sc)
 
-initial_dataframe = spark.read.csv("/home/djex/workspace/upwork/rana_khan_toronto/pyspark_grouping/test-input.csv")
+initial_dataframe = spark.read.csv("/home/djex/workspace/upwork/rana_khan_toronto/pyspark_grouping/test-input2.csv")
 
 
 def split_list(input_seq):
@@ -46,15 +46,15 @@ split_badDF = badDF.select("tid",
 
 exploded_df = split_badDF.select("*", F.explode("split_timestamps").alias("timestamps"))
 
-exploded_df = exploded_df.drop("split_timestamps")
+exploded_df2 = exploded_df.drop("split_timestamps")
 
 trueDF = goodDF.drop("is_properly_aggregated")
 
-unionedDF = trueDF.union(exploded_df).sort("timestamps")
+unionedDF = trueDF.union(exploded_df2).sort("tid", "timestamps")
 
 final_df = unionedDF\
     .withColumn("start_time", F.col("timestamps")[0])\
     .withColumn("end_time", F.col("timestamps")[size("timestamps")-1])\
     .withColumn("count", size(F.col("timestamps")))\
     .drop("timestamps")
-final_df.show(30)
+final_df.show(150, False)
